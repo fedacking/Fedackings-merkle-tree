@@ -2,7 +2,10 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 
 /* Internal struct explanations
 We have a vector that stores all vectors with the corresponding hashes
-level 0 is all of the hashes
+level 0 is all of the hashes of the data, and the subsequent levels
+are the combined hashes of the "branches" in the tree.
+Levels indicates how many total combination we have and count
+how many leaves we have
 */
 struct MerkleTree {
     hashes: Vec<Vec<u64>>,
