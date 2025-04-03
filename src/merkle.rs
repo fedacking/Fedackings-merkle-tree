@@ -102,14 +102,43 @@ impl MerkleTree {
 
     // A Merkle Tree can generate a proof that it contains an element.
     // A proof consists of the other hashes that are required to compare with the
-    // root of the tree
+    // root of the tree (assuming the user knows the hash of their data)
+    // Because we have already generated it, it's fairly easy to send up
     pub fn generate_proof(&self, index: usize) -> Vec<u64> {
-        todo!()
+        let mut proof: Vec<u64> = vec![];
+        let mut parent_index = index;
+        for i in 0..(self.levels - 1) {
+            if parent_index % 2 != 0 { 
+                proof.push(self.hashes[i][parent_index - 1]);
+            } else {
+                proof.push(match self.hashes[i].get(parent_index + 1) {
+                    Some(val) => *val,
+                    _ => self.hashes[i][parent_index]
+                });
+            }
+            parent_index /= 2;
+        }
+        proof
     }
 
     // A Merkle Tree can verify that a given hash is contained in it.
-    pub fn verify_proof(&self, index: usize) -> bool {
-        todo!()
+    pub fn verify_proof(&self, mut index: usize, proof: Vec<u64>) -> bool {
+        let mut element_hash = self.hashes[0][index];
+        for i in 1..self.levels {
+            if index % 2 == 1 {
+                element_hash = hash(self.hashes[i - 1][index - 1], Some(element_hash));
+            } else {
+                element_hash = match self.hashes[i - 1].get(index + 1) {
+                    Some(value) => hash(element_hash, Some(*value)),
+                    _ => hash(element_hash, Some(element_hash))
+                }
+            }
+            index /= 2;
+            if element_hash != proof[i-1] {
+                return false
+            }
+        }
+        true
     }
 }
 
@@ -233,5 +262,14 @@ mod tests {
 
         assert_ne!(*tree.root().unwrap(), root);
         assert_ne!(tree.levels, levels);
+    }
+
+    #[test]
+    fn check_generate_proof() {
+        let mut tree = MerkleTree::from_array([1, 2, 3, 4, 5, 6, 7, 8]);
+        let root = tree.root().unwrap();
+        let proof = tree.generate_proof(3);
+
+        print!("");
     }
 }
