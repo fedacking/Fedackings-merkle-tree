@@ -9,12 +9,14 @@ struct MerkleTree {
     count: usize,
 }
 
-// Private hash function to not have to repeate myself with the 
+// Private hash function to not have to repeate myself with the
 // defaulthasher boilerplater
 fn hash<T: Hash>(left: T, right: Option<T>) -> u64 {
     let mut hasher = DefaultHasher::new();
     left.hash(&mut hasher);
-    if let Some(val) = right { val.hash(&mut hasher) }
+    if let Some(val) = right {
+        val.hash(&mut hasher)
+    }
     hasher.finish()
 }
 
@@ -37,9 +39,9 @@ impl MerkleTree {
 
             let mut index = 0;
 
-            while index < hashes[levels-1].len() {
+            while index < hashes[levels - 1].len() {
                 let left = hashes[levels - 1][index];
-                let right = match hashes[levels - 1].get(index + 1){
+                let right = match hashes[levels - 1].get(index + 1) {
                     Some(value) => *value,
                     None => left,
                 };
@@ -98,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn check_base_layer(){
+    fn check_base_layer() {
         let array = [10_u64; 2];
         let tree = MerkleTree::from_array(array);
 
@@ -110,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn check_merged_hash(){
+    fn check_merged_hash() {
         let array = [10_u64; 2];
         let tree = MerkleTree::from_array(array);
 
@@ -125,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    fn check_unbalanced_tree(){
+    fn check_unbalanced_tree() {
         let array = [10_u64; 6];
         let tree = MerkleTree::from_array(array);
 
@@ -137,8 +139,8 @@ mod tests {
     }
 
     #[test]
-    fn check_unbalanced_tree_hashes(){
-        let array: [u64; 5] = [0,1,2,3,4];
+    fn check_unbalanced_tree_hashes() {
+        let array: [u64; 5] = [0, 1, 2, 3, 4];
         let tree = MerkleTree::from_array(array);
 
         let mut hasher = DefaultHasher::new();
@@ -152,8 +154,8 @@ mod tests {
     }
 
     #[test]
-    fn check_hash_ordering(){
-        let array: [u64; 2] = [0,1];
+    fn check_hash_ordering() {
+        let array: [u64; 2] = [0, 1];
         let tree = MerkleTree::from_array(array);
 
         let hash_0 = hash(0_u64, None);

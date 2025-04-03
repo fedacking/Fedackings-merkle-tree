@@ -11,6 +11,9 @@ Necesary features:
     A Merkle Tree can generate a proof that it contains an element.
     A Merkle Tree can verify that a given hash is contained in it.
 
+## Structure
+
+The Merkle tree is stored in a vector of vectos. The hashes[0] is the vector of hashes of the base elements and each subsequent level is the hash of the elements below. In case of an unbalanced tree the nodes without brothers just hash with themselves to create a parent.
 
 ## Running
 
