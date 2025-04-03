@@ -4,7 +4,7 @@ A rust implementation of a Merkle Tree data structure. The merkle tree is a bina
 
 ## Running
 
-You can run the game by using:
+You can run the test program by using:
 
 ```
 make run
