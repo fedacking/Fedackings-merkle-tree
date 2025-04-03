@@ -22,7 +22,7 @@ fn hash<T: Hash>(left: T, right: Option<T>) -> u64 {
 
 impl MerkleTree {
     fn max_count(&self) -> usize {
-        2_usize.pow(self.levels as u32)
+        1 << self.levels
     }
 
     // A Merkle Tree can be built out of an array.
@@ -66,8 +66,8 @@ impl MerkleTree {
     }
 
     // Returns the root hash of the tree
-    pub fn root(&self) -> u64 {
-        return self.hashes[self.levels - 1][0];
+    pub fn root(&self) -> Option<&u64> {
+        self.hashes[self.levels - 1].first()
     }
 
     // A Merkle Tree can generate a proof that it contains an element.
@@ -165,5 +165,12 @@ mod tests {
 
         assert_eq!(tree.hashes[1][0], hash_correct);
         assert_ne!(tree.hashes[1][0], hash_wrong);
+    }
+
+    #[test]
+    fn check_empty_tree_root() {
+        let tree = MerkleTree::from_array([0_u64; 0]);
+
+        assert_eq!(tree.root(), None);
     }
 }
