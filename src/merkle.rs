@@ -68,13 +68,19 @@ impl MerkleTree {
     pub fn insert_element<T: Hash>(&mut self, element: T) -> usize {
         let mut index = self.count;
         self.count += 1;
+
+        // If we're at the limit of size, we need a new level to combine the new leaf with the rest
         if self.count > self.max_count() {
             self.hashes.push(vec![0]);
             self.levels += 1;
         }
+
+        // We update the affected parent for each level, which is always the rightmost one
         let mut new_hash = hash(element, None);
         self.hashes[0].push(new_hash);
         for i in 1..self.levels {
+            // If the index is odd, the parent already exists and needs to be updated
+            // If the index is even, we're creating a new parent
             if index % 2 != 0 {
                 new_hash = hash(self.hashes[i - 1][index - 1], Some(new_hash));
                 index /= 2;
