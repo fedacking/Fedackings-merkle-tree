@@ -102,14 +102,48 @@ impl MerkleTree {
 
     // A Merkle Tree can generate a proof that it contains an element.
     // A proof consists of the other hashes that are required to compare with the
-    // root of the tree
+    // root of the tree (assuming the user knows the hash of their data)
+    // Because we have already generated it, it's fairly easy to make
+    // In case of a tree too small or index out of range, returns an empty proof
+    // TODO: for more than an mvp, consider changing this to a result, and send
+    // an OutOfRangeIndex error
     pub fn generate_proof(&self, index: usize) -> Vec<u64> {
-        todo!()
+        let mut proof: Vec<u64> = vec![];
+        if index >= self.count {
+            return proof;
+        }
+        let mut parent_index = index;
+        for i in 0..(self.levels - 1) {
+            if parent_index % 2 != 0 {
+                proof.push(self.hashes[i][parent_index - 1]);
+            } else {
+                proof.push(match self.hashes[i].get(parent_index + 1) {
+                    Some(val) => *val,
+                    _ => self.hashes[i][parent_index],
+                });
+            }
+            parent_index /= 2;
+        }
+        proof
     }
 
     // A Merkle Tree can verify that a given hash is contained in it.
-    pub fn verify_proof(&self, index: usize) -> bool {
-        todo!()
+    // This verification doesn't require access to the tree, so we don't provide it
+    pub fn verify_proof(
+        mut element_hash: u64,
+        mut index: usize,
+        proof: Vec<u64>,
+        root: u64,
+    ) -> bool {
+        for proof_hash in proof.iter() {
+            element_hash = if index % 2 == 1 {
+                hash(proof_hash, Some(&element_hash))
+            } else {
+                hash(element_hash, Some(*proof_hash))
+            };
+            index /= 2;
+        }
+        root == element_hash
     }
 }
 
@@ -198,6 +232,22 @@ mod tests {
     }
 
     #[test]
+    fn check_complex_root() {
+        let array: [u64; 4] = [0, 1, 2, 3];
+        let tree = MerkleTree::from_array(array);
+
+        let hash_0 = hash(0_u64, None);
+        let hash_1 = hash(1_u64, None);
+        let hash_2 = hash(2_u64, None);
+        let hash_3 = hash(3_u64, None);
+        let hash_left = hash(hash_0, Some(hash_1));
+        let hash_right = hash(hash_2, Some(hash_3));
+        let hash_root = hash(hash_left, Some(hash_right));
+
+        assert_eq!(*tree.root().unwrap(), hash_root);
+    }
+
+    #[test]
     fn check_empty_tree_root() {
         let tree = MerkleTree::from_array([0_u64; 0]);
 
@@ -233,5 +283,50 @@ mod tests {
 
         assert_ne!(*tree.root().unwrap(), root);
         assert_ne!(tree.levels, levels);
+    }
+
+    #[test]
+    fn check_generate_proof() {
+        let tree = MerkleTree::from_array([1, 2, 3, 4, 5, 6, 7, 8]);
+        let proof = tree.generate_proof(3);
+
+        assert_eq!(tree.hashes[0][2], proof[0]);
+        assert_eq!(tree.hashes[1][0], proof[1]);
+        assert_eq!(tree.hashes[2][1], proof[2]);
+    }
+
+    #[test]
+    fn check_generate_empty_proof() {
+        let tree = MerkleTree::from_array([1]);
+        let proof = tree.generate_proof(0);
+
+        assert_eq!(proof.len(), 0);
+    }
+
+    #[test]
+    fn check_generate_oob_proof() {
+        let tree = MerkleTree::from_array([0, 1, 2, 3, 4, 5]);
+        let proof = tree.generate_proof(50);
+
+        assert_eq!(proof.len(), 0);
+    }
+
+    #[test]
+    fn check_validate_proof() {
+        let tree = MerkleTree::from_array([1, 2, 3, 4, 5, 6, 7, 8]);
+        let root: u64 = *tree.root().unwrap();
+        let proof = tree.generate_proof(3);
+        let element_hash = hash(4, None);
+        let mut fake_proof = proof.clone();
+        fake_proof[0] = 0;
+
+        assert!(MerkleTree::verify_proof(
+            element_hash,
+            3,
+            proof.clone(),
+            root
+        ));
+        assert!(!MerkleTree::verify_proof(element_hash, 2, proof, root));
+        assert!(!MerkleTree::verify_proof(element_hash, 3, fake_proof, root));
     }
 }
