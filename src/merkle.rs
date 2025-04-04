@@ -1,7 +1,11 @@
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 /* Internal struct explanations
-We have a vector that stores all hashes and all
+We have a vector that stores all vectors with the corresponding hashes
+level 0 is all of the hashes of the data, and the subsequent levels
+are the combined hashes of the "branches" in the tree.
+Levels indicates how many total combination we have and count
+how many leaves we have
 */
 struct MerkleTree {
     hashes: Vec<Vec<u64>>,
@@ -9,7 +13,7 @@ struct MerkleTree {
     count: usize,
 }
 
-// Private hash function to not have to repeate myself with the
+// Private hash function to not have to repeat myself with the
 // defaulthasher boilerplater
 fn hash<T: Hash>(left: T, right: Option<T>) -> u64 {
     let mut hasher = DefaultHasher::new();
@@ -22,7 +26,7 @@ fn hash<T: Hash>(left: T, right: Option<T>) -> u64 {
 
 impl MerkleTree {
     fn max_count(&self) -> usize {
-        1 << self.levels
+        1 << (self.levels - 1)
     }
 
     // A Merkle Tree can be built out of an array.
@@ -60,9 +64,35 @@ impl MerkleTree {
     }
 
     // A Merkle Tree can be dynamic, this means that elements can be added once it is built.
-    //Inserts an element and returns the hash and place where it has been inserted
-    pub fn insert_element<T: Hash>(&self, element: T) -> (u64, usize) {
-        todo!()
+    //Inserts an element and returns the index where it has been inserted
+    pub fn insert_element<T: Hash>(&mut self, element: T) -> usize {
+        let mut index = self.count;
+        self.count += 1;
+
+        // If we're at the limit of size, we need a new level to combine the new leaf with the rest
+        if self.count > self.max_count() {
+            self.hashes.push(vec![0]);
+            self.levels += 1;
+        }
+
+        // We update the affected parent for each level, which is always the rightmost one
+        let mut new_hash = hash(element, None);
+        self.hashes[0].push(new_hash);
+        for i in 1..self.levels {
+            // If the index is odd, the parent already exists and needs to be updated
+            // If the index is even, we're creating a new parent
+            if index % 2 != 0 {
+                new_hash = hash(self.hashes[i - 1][index - 1], Some(new_hash));
+                index /= 2;
+                self.hashes[i][index] = new_hash;
+            } else {
+                new_hash = hash(new_hash, Some(new_hash));
+                index /= 2;
+                self.hashes[i].push(new_hash);
+            };
+        }
+
+        self.count - 1
     }
 
     // Returns the root hash of the tree
@@ -172,5 +202,36 @@ mod tests {
         let tree = MerkleTree::from_array([0_u64; 0]);
 
         assert_eq!(tree.root(), None);
+    }
+
+    #[test]
+    fn check_add_to_empty_tree() {
+        let mut tree = MerkleTree::from_array([0_u64; 0]);
+        tree.insert_element(5_u64);
+        let hash_5 = hash(5_u64, None);
+
+        assert_eq!(*tree.root().unwrap(), hash_5);
+    }
+
+    #[test]
+    fn check_add_changes_root() {
+        let mut tree = MerkleTree::from_array([4_u64; 1]);
+        let root = *tree.root().unwrap();
+        tree.insert_element(5_u64);
+        let root_hash = hash(hash(4_u64, None), Some(hash(5_u64, None)));
+
+        assert_ne!(*tree.root().unwrap(), root);
+        assert_eq!(*tree.root().unwrap(), root_hash);
+    }
+
+    #[test]
+    fn check_add_changes_root_large() {
+        let mut tree = MerkleTree::from_array([4_u64; 8]);
+        let levels = tree.levels;
+        let root = *tree.root().unwrap();
+        tree.insert_element(5_u64);
+
+        assert_ne!(*tree.root().unwrap(), root);
+        assert_ne!(tree.levels, levels);
     }
 }
