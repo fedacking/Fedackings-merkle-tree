@@ -227,6 +227,22 @@ mod tests {
     }
 
     #[test]
+    fn check_complex_root() {
+        let array: [u64; 4] = [0, 1, 2, 3];
+        let tree = MerkleTree::from_array(array);
+
+        let hash_0 = hash(0_u64, None);
+        let hash_1 = hash(1_u64, None);
+        let hash_2 = hash(2_u64, None);
+        let hash_3 = hash(3_u64, None);
+        let hash_left = hash(hash_0, Some(hash_1));
+        let hash_right = hash(hash_2, Some(hash_3));
+        let hash_root = hash(hash_left, Some(hash_right));
+
+        assert_eq!(*tree.root().unwrap(), hash_root);
+    }
+
+    #[test]
     fn check_empty_tree_root() {
         let tree = MerkleTree::from_array([0_u64; 0]);
 
