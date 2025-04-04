@@ -122,23 +122,21 @@ impl MerkleTree {
     }
 
     // A Merkle Tree can verify that a given hash is contained in it.
-    pub fn verify_proof(&self, mut index: usize, proof: Vec<u64>) -> bool {
-        if index >= self.count {
-            return false;
-        }
-        let mut element_hash = self.hashes[0][index];
+    pub fn verify_proof(
+        mut element_hash: u64,
+        mut index: usize,
+        proof: Vec<u64>,
+        root: u64,
+    ) -> bool {
         for proof_hash in proof.iter() {
-            if index % 2 == 1 {
-                element_hash = hash(proof_hash, Some(&element_hash))
+            element_hash = if index % 2 == 1 {
+                hash(proof_hash, Some(&element_hash))
             } else {
-                element_hash = hash(element_hash, Some(*proof_hash))
-            }
+                hash(element_hash, Some(*proof_hash))
+            };
             index /= 2;
         }
-        match self.root() {
-            Some(root) => *root == element_hash,
-            None => panic!("This should never happen, the count should be bigger than 0"),
-        }
+        root == element_hash
     }
 }
 
@@ -293,12 +291,19 @@ mod tests {
     #[test]
     fn check_validate_proof() {
         let tree = MerkleTree::from_array([1, 2, 3, 4, 5, 6, 7, 8]);
+        let root: u64 = *tree.root().unwrap();
         let proof = tree.generate_proof(3);
+        let element_hash = hash(4, None);
         let mut fake_proof = proof.clone();
         fake_proof[0] = 0;
 
-        assert!(tree.verify_proof(3, proof.clone()));
-        assert!(!tree.verify_proof(2, proof));
-        assert!(!tree.verify_proof(3, fake_proof));
+        assert!(MerkleTree::verify_proof(
+            element_hash,
+            3,
+            proof.clone(),
+            root
+        ));
+        assert!(!MerkleTree::verify_proof(element_hash, 2, proof, root));
+        assert!(!MerkleTree::verify_proof(element_hash, 3, fake_proof, root));
     }
 }
