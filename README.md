@@ -26,10 +26,11 @@ The Merkle tree is stored in a vector of vectos. The hashes[0] is the vector of 
 
 ## Running
 
-You can run the test program by using:
+You can add the library to your dependencies like so in Cargo.toml:
 
 ```
-make run
+[dependencies]
+fedackings-merkle-tree = { git = "https://github.com/fedacking/Fedackings-merkle-tree.git", branch = "feature/make-library" }
 ```
 
 Tests can be executed with:

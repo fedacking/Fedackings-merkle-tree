@@ -64,7 +64,7 @@ impl MerkleTree {
     }
 
     // A Merkle Tree can be dynamic, this means that elements can be added once it is built.
-    //Inserts an element and returns the index where it has been inserted
+    // Inserts an element and returns the index where it has been inserted
     pub fn insert_element<T: Hash>(&mut self, element: T) -> usize {
         let mut index = self.count;
         self.count += 1;
@@ -103,10 +103,9 @@ impl MerkleTree {
     // A Merkle Tree can generate a proof that it contains an element.
     // A proof consists of the other hashes that are required to compare with the
     // root of the tree (assuming the user knows the hash of their data)
-    // Because we have already generated it, it's fairly easy to make
-    // In case of a tree too small or index out of range, returns an empty proof
-    // TODO: for more than an mvp, consider changing this to a result, and send
-    // an OutOfRangeIndex error
+    // Because we have already generated it, we only need to find the proper indexes
+    // In case of a tree with less than 2 elements or index out of range, returns an empty proof
+    // TODO: Consider changing this to a result, and send an OutOfRangeIndex error
     pub fn generate_proof(&self, index: usize) -> Vec<u64> {
         let mut proof: Vec<u64> = vec![];
         if index >= self.count {
