@@ -103,9 +103,15 @@ impl MerkleTree {
     // A Merkle Tree can generate a proof that it contains an element.
     // A proof consists of the other hashes that are required to compare with the
     // root of the tree (assuming the user knows the hash of their data)
-    // Because we have already generated it, it's fairly easy to send up
+    // Because we have already generated it, it's fairly easy to make
+    // In case of a tree too small or index out of range, returns an empty proof
+    // TODO: for more than an mvp, consider changing this to a result, and send
+    // an OutOfRangeIndex error
     pub fn generate_proof(&self, index: usize) -> Vec<u64> {
         let mut proof: Vec<u64> = vec![];
+        if index >= self.count {
+            return proof;
+        }
         let mut parent_index = index;
         for i in 0..(self.levels - 1) {
             if parent_index % 2 != 0 {
@@ -122,6 +128,7 @@ impl MerkleTree {
     }
 
     // A Merkle Tree can verify that a given hash is contained in it.
+    // This verification doesn't require access to the tree, so we don't provide it
     pub fn verify_proof(
         mut element_hash: u64,
         mut index: usize,
@@ -286,6 +293,22 @@ mod tests {
         assert_eq!(tree.hashes[0][2], proof[0]);
         assert_eq!(tree.hashes[1][0], proof[1]);
         assert_eq!(tree.hashes[2][1], proof[2]);
+    }
+
+    #[test]
+    fn check_generate_empty_proof() {
+        let tree = MerkleTree::from_array([1]);
+        let proof = tree.generate_proof(0);
+
+        assert_eq!(proof.len(), 0);
+    }
+
+    #[test]
+    fn check_generate_oob_proof() {
+        let tree = MerkleTree::from_array([0, 1, 2, 3, 4, 5]);
+        let proof = tree.generate_proof(50);
+
+        assert_eq!(proof.len(), 0);
     }
 
     #[test]
