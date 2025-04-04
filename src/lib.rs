@@ -7,7 +7,7 @@ are the combined hashes of the "branches" in the tree.
 Levels indicates how many total combination we have and count
 how many leaves we have
 */
-struct MerkleTree {
+pub struct MerkleTree {
     hashes: Vec<Vec<u64>>,
     levels: usize,
     count: usize,
