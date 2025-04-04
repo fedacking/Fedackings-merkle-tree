@@ -4,12 +4,21 @@ A rust implementation of a Merkle Tree data structure. The merkle tree is a bina
 
 ## MVP Features
 
-Necesary features:
+Implemented features:
 
     A Merkle Tree can be built out of an array.
     A Merkle Tree can be dynamic, this means that elements can be added once it is built.
     A Merkle Tree can generate a proof that it contains an element.
     A Merkle Tree can verify that a given hash is contained in it.
+
+These have been implemented with the following methods:
+
+    MerkleTree::from_array(array: [T; count]) -> Self
+    MerkleTree::insert_element(&mut self, element: T) -> usize
+    MerkleTree::generate_proof(&self, index: usize) -> Vec<u64>
+    MerkleTree::verify_proof(mut element_hash: u64, mut index: usize, proof: Vec<u64>, root: u64) -> bool
+
+The hashes are represented as u64 numbers given out by our hash method, that takes up to two parameters. Every element inserted needs to implement the Hash trait for our hashing.
 
 ## Structure
 
