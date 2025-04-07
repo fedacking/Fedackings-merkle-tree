@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "Fedackings-merkle-tree"
+name = "fedackings-merkle-tree"
 version = "0.1.0"

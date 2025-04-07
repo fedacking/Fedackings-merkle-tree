@@ -22,14 +22,15 @@ The hashes are represented as u64 numbers given out by our hash method, that tak
 
 ## Structure
 
-The Merkle tree is stored in a vector of vectos. The hashes[0] is the vector of hashes of the base elements and each subsequent level is the hash of the elements below. In case of an unbalanced tree the nodes without brothers just hash with themselves to create a parent.
+The Merkle tree is stored in a vector of vectors. The hashes[0] is the vector of hashes of the base elements and each subsequent level is the hash of the elements below. In case of an unbalanced tree the nodes without brothers just hash with themselves to create a parent.
 
 ## Running
 
-You can run the test program by using:
+You can add the library to your dependencies like so in Cargo.toml:
 
 ```
-make run
+[dependencies]
+fedackings-merkle-tree = { git = "https://github.com/fedacking/Fedackings-merkle-tree.git", branch = "main" }
 ```
 
 Tests can be executed with:
