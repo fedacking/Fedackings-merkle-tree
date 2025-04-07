@@ -30,7 +30,7 @@ You can add the library to your dependencies like so in Cargo.toml:
 
 ```
 [dependencies]
-fedackings-merkle-tree = { git = "https://github.com/fedacking/Fedackings-merkle-tree.git", branch = "feature/make-library" }
+fedackings-merkle-tree = { git = "https://github.com/fedacking/Fedackings-merkle-tree.git", branch = "main" }
 ```
 
 Tests can be executed with:
